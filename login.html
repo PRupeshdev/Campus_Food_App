@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VIT-AP Smart Campus Food Ordering System - Student Login">
+  <title>Login - Smart Campus Food Ordering</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* ========================================
+       LOGIN PAGE SPECIFIC STYLES
+       ======================================== */
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      position: relative;
+      overflow: hidden;
+      padding: var(--spacing-lg);
+    }
+
+    /* Animated Background */
+    .login-page::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      top: -100px;
+      right: -100px;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .login-page::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      bottom: -50px;
+      left: -50px;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(-20px) rotate(180deg);
+      }
+    }
+
+    /* Interactive Canvas Background */
+    #bg-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      /* Let clicks pass through */
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 2;
+      /* Ensure above canvas */
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-2xl);
+      padding: var(--spacing-3xl);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto var(--spacing-lg);
+      background: var(--gradient-primary);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .login-title {
+      font-size: var(--font-size-3xl);
+      font-weight: 800;
+      margin-bottom: var(--spacing-sm);
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-subtitle {
+      font-size: var(--font-size-base);
+      color: var(--gray);
+      margin-bottom: 0;
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-2xl);
+      background: var(--lighter-gray);
+      padding: var(--spacing-xs);
+      border-radius: var(--radius-lg);
+    }
+
+    .login-tab {
+      flex: 1;
+      padding: var(--spacing-md);
+      border: none;
+      background: transparent;
+      color: var(--gray);
+      font-weight: 600;
+      font-size: var(--font-size-base);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .login-tab.active {
+      background: var(--white);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-form {
+      display: none;
+    }
+
+    .login-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .password-field {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      font-size: var(--font-size-lg);
+      padding: var(--spacing-xs);
+    }
+
+    .password-toggle:hover {
+      color: var(--primary);
+    }
+
+    .form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+      font-size: var(--font-size-sm);
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .remember-me input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .forgot-password {
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+
+    .login-footer {
+      margin-top: var(--spacing-xl);
+      text-align: center;
+      font-size: var(--font-size-sm);
+      color: var(--gray);
+    }
+
+    .demo-info {
+      margin-top: var(--spacing-xl);
+      padding: var(--spacing-md);
+      background: #dbeafe;
+      border-radius: var(--radius-lg);
+      border-left: 4px solid var(--status-placed);
+    }
+
+    .demo-info h4 {
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--spacing-sm);
+      color: var(--status-placed);
+    }
+
+    .demo-info p {
+      font-size: var(--font-size-xs);
+      color: var(--dark-secondary);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .demo-credentials {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-sm);
+    }
+
+    .demo-credentials button {
+      flex: 1;
+      padding: var(--spacing-sm);
+      font-size: var(--font-size-xs);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-page">
+    <canvas id="bg-canvas"></canvas>
+    <div class="login-container">
+      <div class="login-card">
+        <!-- Header -->
+        <div class="login-header">
+          <div class="login-logo">🍽️</div>
+          <h1 class="login-title">VIT-AP Food Street</h1>
+          <p class="login-subtitle">Smart Campus Food Ordering System</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="login-tabs">
+          <button class="login-tab active" data-tab="signin" id="signinTab">Sign In</button>
+          <button class="login-tab" data-tab="signup" id="signupTab">Sign Up</button>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Sign In Form -->
+        <form id="signinForm" class="login-form active">
+          <div class="form-group">
+            <label class="form-label" for="signin-email">Email Address</label>
+            <input type="email" id="signin-email" class="form-input" placeholder="student@vitap.ac.in" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signin-password">Password</label>
+            <div class="password-field">
+              <input type="password" id="signin-password" class="form-input" placeholder="Enter your password" required>
+              <button type="button" class="password-toggle" data-target="signin-password">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div class="form-options">
+            <label class="remember-me">
+              <input type="checkbox" id="remember-me">
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="signinBtn">
+            <span>Sign In</span>
+          </button>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm" class="login-form">
+          <div class="form-group">
+            <label class="form-label" for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" class="form-input" placeholder="Enter your full name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-email">Email Address</label>
+            <input type="email" id="signup-email" class="form-input" placeholder="student@vitap.ac.in" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <div class="password-field">
+              <input type="password" id="signup-password" class="form-input"
+                placeholder="Create a password (min. 6 characters)" required minlength="6">
+              <button type="button" class="password-toggle" data-target="signup-password">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-confirm-password">Confirm Password</label>
+            <div class="password-field">
+              <input type="password" id="signup-confirm-password" class="form-input"
+                placeholder="Re-enter your password" required minlength="6">
+              <button type="button" class="password-toggle" data-target="signup-confirm-password">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="signupBtn">
+            <span>Create Account</span>
+          </button>
+        </form>
+
+
+
+        <div class="login-footer">
+          <p>&copy; 2025 VIT-AP University. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Config -->
+  <script src="firebase-config.js"></script>
+  <script src="firebase-demo-addon.js"></script>
+
+  <!-- Demo Mode Banner -->
+  <script>
+    // Show demo mode banner if Firebase not configured
+    if (typeof DEMO_MODE !== 'undefined' && DEMO_MODE) {
+      window.addEventListener('DOMContentLoaded', () => {
+        const banner = document.createElement('div');
+        banner.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          color: white;
+          padding: 12px 20px;
+          text-align: center;
+          font-size: 14px;
+          font-weight: 600;
+          z-index: 10000;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        banner.innerHTML = `
+          ⚠️ DEMO MODE - Firebase Not Configured | 
+          <a href="setup.html" style="color: white; text-decoration: underline; margin: 0 8px;">📚 View Setup Guide</a> | 
+          <span style="cursor: pointer; text-decoration: underline;" onclick="this.parentElement.parentElement.remove()">✕ Close</span>
+        `;
+        document.body.appendChild(banner);
+
+        // Adjust page padding
+        document.querySelector('.login-page').style.paddingTop = '60px';
+      });
+    }
+  </script>
+
+  <!-- Page Script -->
+  <script>
+    // ========================================
+    // TAB SWITCHING
+    // ========================================
+    const tabs = document.querySelectorAll('.login-tab');
+    const forms = document.querySelectorAll('.login-form');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.dataset.tab;
+
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update active form
+        forms.forEach(form => {
+          form.classList.remove('active');
+          if (form.id === `${targetTab}Form`) {
+            form.classList.add('active');
+          }
+        });
+
+        // Clear alert
+        clearAlert();
+      });
+    });
+
+    // ========================================
+    // PASSWORD TOGGLE
+    // ========================================
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+
+    passwordToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const targetId = toggle.dataset.target;
+        const input = document.getElementById(targetId);
+
+        if (input.type === 'password') {
+          input.type = 'text';
+          toggle.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          toggle.textContent = '👁️';
+        }
+      });
+    });
+
+    // ========================================
+    // ALERT FUNCTIONS
+    // ========================================
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alertContainer');
+      const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+
+      alertContainer.innerHTML = `
+        <div class="alert ${alertClass}">
+          ${type === 'success' ? '✅' : '❌'} ${message}
+        </div>
+      `;
+
+      // Auto-hide after 5 seconds
+      setTimeout(clearAlert, 5000);
+    }
+
+    function clearAlert() {
+      const alertContainer = document.getElementById('alertContainer');
+      alertContainer.innerHTML = '';
+    }
+
+    // ========================================
+    // DEMO CREDENTIALS
+    // ========================================
+    // Demo credentials function removed.
+
+    // ========================================
+    // SIGN IN HANDLER
+    // ========================================
+    const signinForm = document.getElementById('signinForm');
+    const signinBtn = document.getElementById('signinBtn');
+
+    signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+
+      // Validation
+      if (!email || !password) {
+        showAlert('Please fill in all fields');
+        return;
+      }
+
+      // Disable button and show loading
+      signinBtn.disabled = true;
+      signinBtn.innerHTML = '<div class="spinner spinner-sm"></div> <span>Signing in...</span>';
+
+      try {
+        const result = await signInUser(email, password);
+
+        if (result.success) {
+          showAlert('Login successful! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          showAlert(result.error || 'Failed to sign in. Please check your credentials.');
+          signinBtn.disabled = false;
+          signinBtn.innerHTML = '<span>Sign In</span>';
+        }
+      } catch (error) {
+        console.error('Sign in error:', error);
+        showAlert('An error occurred. Please try again.');
+        signinBtn.disabled = false;
+        signinBtn.innerHTML = '<span>Sign In</span>';
+      }
+    });
+
+    // ========================================
+    // SIGN UP HANDLER
+    // ========================================
+    const signupForm = document.getElementById('signupForm');
+    const signupBtn = document.getElementById('signupBtn');
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+      // Validation
+      if (!name || !email || !password || !confirmPassword) {
+        showAlert('Please fill in all fields');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert('Password must be at least 6 characters long');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match');
+        return;
+      }
+
+      // Disable button and show loading
+      signupBtn.disabled = true;
+      signupBtn.innerHTML = '<div class="spinner spinner-sm"></div> <span>Creating account...</span>';
+
+      try {
+        const result = await registerUser(email, password, name);
+
+        if (result.success) {
+          showAlert('Account created successfully! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          showAlert(result.error || 'Failed to create account. Please try again.');
+          signupBtn.disabled = false;
+          signupBtn.innerHTML = '<span>Create Account</span>';
+        }
+      } catch (error) {
+        console.error('Sign up error:', error);
+        showAlert('An error occurred. Please try again.');
+        signupBtn.disabled = false;
+        signupBtn.innerHTML = '<span>Create Account</span>';
+      }
+    });
+
+    // ========================================
+    // CHECK AUTH STATE
+    // ========================================
+    checkAuthState(false);
+  </script>
+
+  <!-- Interactive Background Script -->
+  <script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particlesArray;
+
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let mouse = {
+      x: null,
+      y: null,
+      radius: 150
+    }
+
+    window.addEventListener('mousemove', (event) => {
+      mouse.x = event.x;
+      mouse.y = event.y;
+    });
+
+    window.addEventListener('mouseout', () => {
+      mouse.x = undefined;
+      mouse.y = undefined;
+    });
+
+    // Create Particle
+    class Particle {
+      constructor(x, y, directionX, directionY, size, color) {
+        this.x = x;
+        this.y = y;
+        this.directionX = directionX;
+        this.directionY = directionY;
+        this.size = size;
+        this.color = color;
+      }
+
+      // Method to draw individual particle
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Semi-transparent white
+        ctx.fill();
+      }
+
+      // Update position
+      update() {
+        // Wall collision
+        // Check both position AND direction to prevent sticky edges
+        if (this.x > canvas.width || this.x < 0) {
+          this.directionX = -this.directionX;
+        }
+        if (this.y > canvas.height || this.y < 0) {
+          this.directionY = -this.directionY;
+        }
+
+        // Mouse interaction (Repel)
+        if (mouse.x != null) {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < mouse.radius + this.size) {
+            if (distance === 0) {
+              dx = 1;
+              distance = 1;
+            }
+            const forceDirectionX = dx / distance;
+            const forceDirectionY = dy / distance;
+            const force = (mouse.radius - distance) / mouse.radius;
+            const directionX = forceDirectionX * force * 5;
+            const directionY = forceDirectionY * force * 5;
+
+            this.x -= directionX;
+            this.y -= directionY;
+          }
+        }
+
+        // Move
+        this.x += this.directionX;
+        this.y += this.directionY;
+
+        // Draw
+        this.draw();
+      }
+    }
+
+    // Init Logic
+    function init() {
+      particlesArray = [];
+      let numberOfParticles = (canvas.height * canvas.width) / 9000;
+      for (let i = 0; i < numberOfParticles; i++) {
+        let size = (Math.random() * 5) + 1; // Size: 1px to 6px
+        let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+        let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+        let directionX = (Math.random() * 1) - 0.5; // Speed
+        let directionY = (Math.random() * 1) - 0.5;
+        let color = '#ffffff';
+
+        particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+      }
+    }
+
+    // Connect particles with lines
+    function connect() {
+      let opacityValue = 1;
+      for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a; b < particlesArray.length; b++) {
+          let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) +
+            ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+
+          // Threshold for connection (adjustable)
+          if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+            opacityValue = 1 - (distance / 20000);
+            ctx.strokeStyle = 'rgba(255, 255, 255,' + opacityValue + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+            ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+      }
+      connect();
+    }
+
+    // Resize event
+    window.addEventListener('resize', () => {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+      init();
+    });
+
+    // Start
+    init();
+    animate();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment - Smart Campus Food Ordering</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .payment-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .payment-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .card-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 5px;
+            background: var(--lighter-gray);
+            border-radius: var(--radius-lg);
+        }
+
+        .payment-method-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .payment-method-btn.active {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .qr-section {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .qr-section.active {
+            display: block;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: #f0f0f0;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #666;
+            border: 2px dashed #ccc;
+        }
+
+        /* Success Animation */
+        .success-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .checkmark-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transform: scale(0);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-overlay.visible .checkmark-circle {
+            transform: scale(1);
+        }
+
+        .checkmark {
+            width: 40px;
+            height: 40px;
+            color: var(--white);
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease 0.2s;
+        }
+
+        .success-overlay.visible .success-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .success-message {
+            color: var(--gray);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease 0.3s;
+        }
+
+        .success-overlay.visible .success-message {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="index.html" class="navbar-brand">🍽️ VIT-AP Food Street</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="payment-container animate-fade-in">
+            <!-- Success Overlay -->
+            <div class="success-overlay" id="successOverlay">
+                <div class="checkmark-circle">
+                    <svg class="checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="success-title">Payment Successful!</h2>
+                <p class="success-message">Your order has been placed successfully.</p>
+                <div style="margin-top: 20px; font-size: 0.9rem; color: var(--primary);">Redirecting to orders...</div>
+            </div>
+
+            <div class="payment-header">
+                <h2>Secure Checkout</h2>
+                <p>Complete your payment to place the order</p>
+                <div class="payment-amount" id="totalAmount">₹0.00</div>
+            </div>
+
+            <div class="payment-methods">
+                <button class="payment-method-btn active" onclick="switchMethod('card')">💳 Card</button>
+                <button class="payment-method-btn" onclick="switchMethod('upi')">📱 UPI</button>
+            </div>
+
+            <!-- Card Payment Form -->
+            <form id="cardForm" class="payment-form">
+                <div class="form-group">
+                    <label class="form-label">Card Holder Name</label>
+                    <input type="text" class="form-input" id="cardName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Card Number</label>
+                    <input type="text" class="form-input" id="cardNumber" placeholder="0000 0000 0000 0000"
+                        maxlength="19" required>
+                </div>
+                <div class="card-row">
+                    <div class="form-group">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="text" class="form-input" id="cardExpiry" placeholder="MM/YY" maxlength="5"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CVV</label>
+                        <input type="password" class="form-input" id="cardCvv" placeholder="123" maxlength="3" required>
+                    </div>
+                </div>
+                <button type="submit" id="payBtn" class="btn btn-primary btn-full btn-lg" style="margin-top: 20px;">
+                    Pay Now
+                </button>
+            </form>
+
+            <!-- UPI Payment Section -->
+            <div id="upiSection" class="qr-section">
+                <div class="qr-code">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=merchant@upi&pn=FoodCourt&am=100"
+                        alt="UPI QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <p>Scan with any UPI app to pay</p>
+                <button type="button" id="upiPayBtn" class="btn btn-primary btn-full btn-lg" style="margin-top: 20px;">
+                    Simulate Payment Success
+                </button>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to
+                Menu</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Config -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-demo-addon.js"></script>
+
+    <script>
+        let cartItems = [];
+        let totalAmount = 0;
+
+        // Initialize
+        async function init() {
+            console.log('Payment page initializing...');
+            // Check auth
+            const user = await checkAuthState(true);
+            if (!user) {
+                console.log('No user logged in, redirecting');
+                // window.location.href = 'login.html'; // Removed direct redirect here
+                return;
+            }
+
+            // Load order data
+            const orderData = sessionStorage.getItem('pendingOrder');
+            if (!orderData) {
+                console.warn('No pending order found in session storage');
+                alert('No pending order found');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(orderData);
+                cartItems = parsed.items;
+                totalAmount = parsed.total;
+                document.getElementById('totalAmount').textContent = formatPrice(totalAmount);
+                console.log('Order data loaded:', cartItems.length, 'items');
+            } catch (e) {
+                console.error('Error parsing order data:', e);
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Switch Payment Method
+        window.switchMethod = function (method) {
+            document.querySelectorAll('.payment-method-btn').forEach(btn => btn.classList.remove('active'));
+            const target = method === 'card' ? document.querySelectorAll('.payment-method-btn')[0] : document.querySelectorAll('.payment-method-btn')[1];
+            if (target) target.classList.add('active');
+
+            if (method === 'card') {
+                document.getElementById('cardForm').style.display = 'grid';
+                document.getElementById('upiSection').classList.remove('active');
+            } else {
+                document.getElementById('cardForm').style.display = 'none';
+                document.getElementById('upiSection').classList.add('active');
+            }
+        };
+
+        // Process Payment & Place Order
+        window.processPayment = async function () {
+            console.log('Processing payment...');
+            const btn = document.getElementById('payBtn');
+            const upiBtn = document.getElementById('upiPayBtn');
+            let targetBtn = null;
+
+            if (btn && btn.offsetParent !== null) { // Check if card form is visible
+                targetBtn = btn;
+            } else if (upiBtn && upiBtn.offsetParent !== null) { // Check if UPI section is visible
+                targetBtn = upiBtn;
+            }
+
+            if (targetBtn) {
+                targetBtn.disabled = true;
+                targetBtn.innerHTML = '<span class="spinner spinner-sm"></span> Processing...';
+            }
+
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            try {
+                // Place order using global function
+                const result = await placeOrder(cartItems, totalAmount);
+                console.log('Order result:', result);
+
+                if (result.success) {
+                    // Clear cart
+                    localStorage.removeItem('cart');
+                    sessionStorage.removeItem('pendingOrder');
+
+                    // Show success animation
+                    document.getElementById('successOverlay').classList.add('visible');
+
+                    // Wait and redirect
+                    setTimeout(() => {
+                        window.location.href = `orders.html?highlight=${result.orderId}`;
+                    }, 3000);
+
+                } else {
+                    alert('Order failed: ' + result.error);
+                    if (targetBtn) {
+                        targetBtn.disabled = false;
+                        targetBtn.innerHTML = 'Pay Now';
+                    }
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('Payment failed. Please try again.');
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = 'Pay Now';
+                }
+            }
+        };
+
+        // Handle Card Payment
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardForm = document.getElementById('cardForm');
+            const upiBtn = document.getElementById('upiPayBtn');
+
+            if (cardForm) {
+                cardForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await window.processPayment();
+                });
+            }
+
+            if (upiBtn) {
+                upiBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await window.processPayment();
+                });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Track your food orders in real-time at VIT-AP Food Hub">
+    <title>My Orders - Smart Campus Food Ordering</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* ========================================
+       ORDERS PAGE SPECIFIC STYLES
+       ======================================== */
+        .page-header {
+            background: var(--gradient-primary);
+            color: var(--white);
+            padding: var(--spacing-2xl) 0;
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .page-title {
+            font-size: var(--font-size-3xl);
+            font-weight: 800;
+            text-align: center;
+            margin: 0;
+        }
+
+        /* Order Status Timeline */
+        .status-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: var(--spacing-xl) 0;
+            position: relative;
+            padding: 0 var(--spacing-md);
+        }
+
+        .status-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: var(--lighter-gray);
+            z-index: 0;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            height: 4px;
+            background: var(--gradient-success);
+            z-index: 1;
+            transition: width var(--transition-slow);
+        }
+
+        .status-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-sm);
+            z-index: 2;
+            position: relative;
+        }
+
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 4px solid var(--lighter-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-lg);
+            transition: all var(--transition-normal);
+        }
+
+        .status-step.completed .status-icon {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--white);
+        }
+
+        .status-step.active .status-icon {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+            animation: pulse 2s infinite;
+        }
+
+        .status-label {
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .status-step.completed .status-label,
+        .status-step.active .status-label {
+            color: var(--dark);
+        }
+
+        /* Order Cards */
+        .orders-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xl);
+        }
+
+        .order-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+        }
+
+        .order-card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+
+        .order-card.highlighted {
+            border: 3px solid var(--primary);
+            animation: pulse 1.5s ease-in-out 3;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--lighter-gray);
+        }
+
+        .order-id-section {
+            flex: 1;
+        }
+
+        .order-id {
+            font-size: var(--font-size-2xl);
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .order-time {
+            font-size: var(--font-size-sm);
+            color: var(--gray);
+        }
+
+        .order-status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+        }
+
+        .order-items-list {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--lighter-gray);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .order-item-image {
+            width: 50px;
+            height: 50px;
+            background: var(--white);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .order-item-details {
+            flex: 1;
+        }
+
+        .order-item-name {
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .order-item-quantity {
+            font-size: var(--font-size-sm);
+            color: var(--gray);
+        }
+
+        .order-item-price {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--spacing-md);
+            border-top: 2px solid var(--lighter-gray);
+        }
+
+        .order-total {
+            font-size: var(--font-size-xl);
+            font-weight: 800;
+        }
+
+        .order-total-amount {
+            color: var(--accent);
+            font-size: var(--font-size-2xl);
+        }
+
+        .order-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* Empty State */
+        .empty-orders {
+            text-align: center;
+            padding: var(--spacing-3xl);
+        }
+
+        .empty-orders-icon {
+            font-size: 8rem;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .empty-orders h2 {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .empty-orders p {
+            color: var(--gray);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Order Detail Modal */
+        .order-detail-content {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .detail-section h3 {
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--spacing-md);
+            color: var(--primary);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--lighter-gray);
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .detail-value {
+            color: var(--gray);
+        }
+
+        /* Loading State */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        @media (max-width: 768px) {
+            .status-timeline {
+                flex-wrap: wrap;
+                gap: var(--spacing-lg);
+            }
+
+            .status-timeline::before,
+            .timeline-progress {
+                display: none;
+            }
+
+            .order-header {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .order-footer {
+                flex-direction: column;
+                gap: var(--spacing-md);
+                align-items: stretch;
+            }
+
+            .order-actions {
+                flex-direction: column;
+            }
+
+            .order-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+            border-bottom: 2px solid var(--lighter-gray);
+        }
+
+        .tab-btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            background: transparent;
+            font-size: var(--font-size-md);
+            font-weight: 600;
+            color: var(--gray);
+            cursor: pointer;
+            position: relative;
+            transition: color var(--transition-normal);
+        }
+
+        .tab-btn:hover {
+            color: var(--dark);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: var(--radius-full) var(--radius-full) 0 0;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content"><a href="index.html" class="navbar-brand">🍽️ VIT-AP Food Street</a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html" class="nav-link">Menu</a></li>
+                    <li><a href="orders.html" class="nav-link active">My Orders</a></li>
+                    <li><button id="logoutBtn" class="btn btn-ghost btn-sm">Logout</button></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">My Orders</h1>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <main class="container" style="margin-bottom: var(--spacing-3xl);">
+        <!-- Tabs -->
+        <div class="tabs"><button class="tab-btn active" id="tab-live" onclick="switchTab('live')">Live
+                Orders</button><button class="tab-btn" id="tab-history" onclick="switchTab('history')">Order
+                History</button></div>
+        <div id="ordersContainer">
+            <div class="loading-container">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </main>
+    <!-- Order Detail Modal -->
+    <div class="modal-overlay hidden" id="orderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalOrderId">Order Details</h2><button class="modal-close"
+                    onclick="closeOrderModal()">✕</button>
+            </div>
+            <div class="modal-body order-detail-content" id="orderDetailContent">
+                <!-- Content will be dynamically loaded -->
+            </div>
+        </div>
+    </div>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-demo-addon.js"></script>
+    <!-- Demo Mode Banner -->
+    <script> // Show demo mode banner if Firebase not configured
+
+        if (typeof DEMO_MODE !== 'undefined' && DEMO_MODE) {
+            window.addEventListener('DOMContentLoaded', () => {
+                const banner = document.createElement('div');
+                banner.style.cssText = ` position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                    color: white;
+                    padding: 12px 20px;
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: 600;
+                    z-index: 10000;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    `;
+                banner.innerHTML = ` ⚠️ DEMO MODE - Firebase Not Configured | <a href="setup.html" style="color: white; text-decoration: underline; margin: 0 8px;" >📚 View Setup Guide</a> | <span style="cursor: pointer; text-decoration: underline;" onclick="this.parentElement.remove()" >✕ Close</span> `;
+                document.body.appendChild(banner);
+
+                // Adjust navbar padding
+                document.querySelector('.navbar').style.marginTop = '48px';
+            });
+        }
+
+    </script>
+    <!-- Page Script -->
+    <script> // ========================================
+        // STATE MANAGEMENT
+        // ========================================
+        let currentUser = null;
+        let userOrders = [];
+        let orderListeners = [];
+        let currentTab = 'live'; // 'live' or 'history'
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        async function init() {
+            // Check authentication
+            currentUser = await checkAuthState(true);
+
+            if (currentUser) {
+                await loadUserOrders();
+
+                // Check for admin
+                if (currentUser.email === 'admin@vitap.ac.in') {
+                    const nav = document.querySelector('.navbar-nav');
+                    const adminLi = document.createElement('li');
+                    adminLi.innerHTML = '<a href="admin.html" class="nav-link" style="color: var(--secondary-dark); font-weight: 700;">Admin Dashboard</a>';
+                    // Insert before Logout button
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (logoutBtn) {
+                        nav.insertBefore(adminLi, logoutBtn.parentElement);
+                    } else {
+                        nav.appendChild(adminLi);
+                    }
+                }
+
+                // Check if we need to highlight a specific order
+                const urlParams = new URLSearchParams(window.location.search);
+                const highlightOrderId = urlParams.get('highlight');
+
+                if (highlightOrderId) {
+                    setTimeout(() => {
+                        const orderCard = document.querySelector(`[data-order-id="${highlightOrderId}"]`);
+
+                        if (orderCard) {
+                            orderCard.scrollIntoView({
+                                behavior: 'smooth', block: 'center'
+                            });
+                            orderCard.classList.add('highlighted');
+                        }
+                    }
+
+                        , 500);
+                }
+            }
+        }
+
+        // ========================================
+        // LOAD ORDERS
+        // ========================================
+        async function loadUserOrders() {
+            try {
+                userOrders = await getUserOrders(currentUser.uid);
+
+                // Set up real-time listeners for active orders
+                userOrders.forEach(order => {
+                    if (order.status !== 'completed') {
+                        const unsubscribe = listenToOrderStatus(order.orderId, (updatedOrder) => {
+                            // Update order in array
+                            const index = userOrders.findIndex(o => o.orderId === updatedOrder.orderId);
+
+                            if (index > -1) {
+                                userOrders[index] = updatedOrder;
+                                renderOrders();
+                            }
+                        });
+                        orderListeners.push(unsubscribe);
+                    }
+                });
+
+                renderOrders();
+            }
+
+            catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('ordersContainer').innerHTML = ` <div class="alert alert-error">Failed to load orders. Please refresh the page. </div>`;
+            }
+        }
+
+        // ========================================
+        // RENDER ORDERS
+        // ========================================
+        // ========================================
+        // SWITCH TABS
+        // ========================================
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            renderOrders();
+        }
+
+        // ========================================
+        // RENDER ORDERS
+        // ========================================
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+
+            const activeOrders = userOrders.filter(o => o.status !== 'completed');
+            const pastOrders = userOrders.filter(o => o.status === 'completed');
+
+            // Determine which orders to show based on tab
+            const ordersToShow = currentTab === 'live' ? activeOrders : pastOrders;
+            const emptyMessage = currentTab === 'live'
+                ? "No active orders. Hungry? Order something!"
+                : "No past orders found.";
+
+            if (ordersToShow.length === 0) {
+                container.innerHTML = `
+                  <div class="empty-orders">
+                    <div class="empty-orders-icon">📦</div>
+                    <h2>${currentTab === 'live' ? 'No Live Orders' : 'No Order History'}</h2>
+                    <p>${emptyMessage}</p>
+                    <a href="index.html" class="btn btn-primary btn-lg">Browse Menu</a>
+                  </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="orders-container">';
+
+            html += ordersToShow.map(order => renderOrderCard(order)).join('');
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderOrderCard(order) {
+            const statusClass = getStatusBadgeClass(order.status);
+            const statusText = getStatusText(order.status);
+            const timestamp = formatTimestamp(order.createdAt);
+
+            return `
+        <div class="order-card animate-fade-in" data-order-id="${order.orderId}">
+          <div class="order-header">
+            <div class="order-id-section">
+              <div class="order-id">${order.orderId}</div>
+              <div class="order-time">⏰ ${timestamp}</div>
+            </div>
+            <span class="badge ${statusClass} order-status-badge">${statusText}</span>
+          </div>
+          
+          ${renderOrderTimeline(order.status)}
+          
+          <div class="order-items-list">
+            ${order.items.map(item => `
+              <div class="order-item">
+                <div class="order-item-image">${item.image}</div>
+                <div class="order-item-details">
+                  <div class="order-item-name">${item.name}</div>
+                  <div class="order-item-quantity">Quantity: ${item.quantity}</div>
+                </div>
+                <div class="order-item-price">${formatPrice(item.price * item.quantity)}</div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="order-footer">
+            <div class="order-total">
+              Total: <span class="order-total-amount">${formatPrice(order.totalAmount)}</span>
+            </div>
+            <div class="order-actions">
+              <button class="btn btn-outline btn-sm" onclick="viewOrderDetails('${order.orderId}')">
+                View Details
+              </button>
+              ${order.status !== 'completed' ? `
+                <button class="btn btn-ghost btn-sm" onclick="simulateStatusUpdate('${order.orderId}')">
+                  🔄 Simulate Update (Demo)
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+        }
+
+        function renderOrderTimeline(currentStatus) {
+            const statuses = ['placed', 'preparing', 'ready'];
+            const currentIndex = statuses.indexOf(currentStatus);
+            const progressWidth = currentIndex >= 0 ? ((currentIndex + 1) / statuses.length) * 80 : 0;
+
+            const statusIcons = {
+                placed: '📝',
+                preparing: '👨‍🍳',
+                ready: '✅'
+            };
+
+            const statusLabels = {
+                placed: 'Placed',
+                preparing: 'Preparing',
+                ready: 'Ready'
+            };
+
+            return `
+        <div class="status-timeline">
+          <div class="timeline-progress" style="width: ${progressWidth}%"></div>
+          ${statuses.map((status, index) => {
+                let stepClass = '';
+                if (index < currentIndex) stepClass = 'completed';
+                else if (index === currentIndex) stepClass = 'active';
+
+                return `
+              <div class="status-step ${stepClass}">
+                <div class="status-icon">${statusIcons[status]}</div>
+                <div class="status-label">${statusLabels[status]}</div>
+              </div>
+            `;
+            }).join('')}
+        </div>
+      `;
+        }
+
+        // ========================================
+        // ORDER DETAIL MODAL
+        // ========================================
+        function viewOrderDetails(orderId) {
+            const order = userOrders.find(o => o.orderId === orderId);
+            if (!order) return;
+
+            const modal = document.getElementById('orderModal');
+            const content = document.getElementById('orderDetailContent');
+
+            document.getElementById('modalOrderId').textContent = order.orderId;
+
+            content.innerHTML = `
+        <div class="detail-section">
+          <h3>📋 Order Information</h3>
+          <div class="detail-row">
+            <span class="detail-label">Order ID:</span>
+            <span class="detail-value">${order.orderId}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="badge ${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Placed At:</span>
+            <span class="detail-value">${formatTimestamp(order.createdAt)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Last Updated:</span>
+            <span class="detail-value">${formatTimestamp(order.updatedAt)}</span>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>🍽️ Items Ordered (${order.items.length})</h3>
+          ${order.items.map(item => `
+            <div class="order-item" style="margin-bottom: var(--spacing-sm);">
+              <div class="order-item-image">${item.image}</div>
+              <div class="order-item-details">
+                <div class="order-item-name">${item.name}</div>
+                <div class="order-item-quantity">
+                  ${formatPrice(item.price)} × ${item.quantity} = ${formatPrice(item.price * item.quantity)}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="detail-section">
+          <h3>💰 Payment Summary</h3>
+          <div class="detail-row">
+            <span class="detail-label">Subtotal:</span>
+            <span class="detail-value">${formatPrice(order.totalAmount)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tax (0%):</span>
+            <span class="detail-value">₹0.00</span>
+          </div>
+          <div class="detail-row" style="border-top: 2px solid var(--dark); padding-top: var(--spacing-md); margin-top: var(--spacing-md);">
+            <span class="detail-label" style="font-size: var(--font-size-lg);">Total Amount:</span>
+            <span class="detail-value" style="font-size: var(--font-size-xl); font-weight: 800; color: var(--accent);">
+              ${formatPrice(order.totalAmount)}
+            </span>
+          </div>
+        </div>
+        
+        ${order.status !== 'completed' ? `
+          <div class="alert alert-info">
+            <strong>ℹ️ Note:</strong> Your order is being processed. You'll be notified when it's ready for pickup!
+          </div>
+        ` : `
+          <div class="alert alert-success">
+            <strong>✅ Completed:</strong> Thank you for your order! We hope you enjoyed your meal.
+          </div>
+        `}
+      `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('orderModal').addEventListener('click', (e) => {
+            if (e.target.id === 'orderModal') {
+                closeOrderModal();
+            }
+        });
+
+        // ========================================
+        // SIMULATE STATUS UPDATE (DEMO)
+        // ========================================
+        async function simulateStatusUpdate(orderId) {
+            const order = userOrders.find(o => o.orderId === orderId);
+            if (!order) return;
+
+            const statusFlow = {
+                'placed': 'preparing',
+                'preparing': 'ready',
+                'ready': 'completed'
+            };
+
+            const nextStatus = statusFlow[order.status];
+
+            if (!nextStatus) {
+                alert('Order is already completed!');
+                return;
+            }
+
+            if (confirm(`Simulate status change:\n${getStatusText(order.status)} → ${getStatusText(nextStatus)}\n\nThis is for demo purposes only.`)) {
+                await updateOrderStatus(orderId, nextStatus);
+                // The real-time listener will automatically update the UI
+            }
+        }
+
+        // ========================================
+        // LOGOUT
+        // ========================================
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+
+            // Unsubscribe from all listeners
+            if (orderListeners && orderListeners.length > 0) {
+                orderListeners.forEach(unsubscribe => unsubscribe());
+            }
+
+            await signOutUser();
+            window.location.href = 'login.html';
+        });
+
+        // ========================================
+        // CLEANUP ON PAGE UNLOAD
+        // ========================================
+        window.addEventListener('beforeunload', () => {
+            orderListeners.forEach(unsubscribe => unsubscribe());
+        });
+
+        // ========================================
+        // START APP
+        // ========================================
+        init();
+    </script>
+</body>
+
+</html>
